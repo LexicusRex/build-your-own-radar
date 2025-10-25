@@ -7,7 +7,7 @@
       "width": 2,
       "height": 2,
       "patternUnits": "userSpaceOnUse",
-      "patternTransform": 2,
+      "patternTransform": "scale(2)",
       "rect": { "width": 1, "height": 2, "fill": "white" }
     }
   },
@@ -19,7 +19,7 @@
       "width": 3,
       "height": 3,
       "patternUnits": "userSpaceOnUse",
-      "patternTransform": 1.5,
+      "patternTransform": "scale(1)",
       "circle": { "cx": 1.5, "cy": 1.5, "r": 1, "fill": "white" }
     }
   },
@@ -30,7 +30,7 @@
       "width": 2,
       "height": 2,
       "patternUnits": "userSpaceOnUse",
-      "patternTransform": 2,
+      "patternTransform": "rotate(45 18 18) scale(2)",
       "rect": { "width": 1, "height": 2, "fill": "white" }
     }
   }

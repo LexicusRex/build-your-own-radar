@@ -117,7 +117,7 @@ function getCustomRingStyle(blipStatus) {
  * @param {string} order - CSS class for the blip order
  * @param {Object} style - Custom style configuration
  */
-function drawCustomRing(group, blip, x, y, order, style) {
+function drawCustomRing(group, blip, x, y, order, style, isLegend = false) {
   const honeDirection = extractHoneDirection(blip.status())
   const _styleName = extractBlipStyleName(blip.status())
 
@@ -133,8 +133,8 @@ function drawCustomRing(group, blip, x, y, order, style) {
       try {
         // sanitize id
         const sanitize = (s) => String(s).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-_]/g, '').toLowerCase()
-        const patternId = `pattern-${_styleName}`
-        const maskId = `mask-${_styleName}`
+        const patternId = isLegend ? `pattern-${_styleName}-legend` : `pattern-${_styleName}`
+        const maskId = isLegend ? `mask-${_styleName}-legend` : `mask-${_styleName}`
 
         // get root svg element to attach defs
         const svgNode = group.node() && group.node().ownerSVGElement
@@ -149,7 +149,10 @@ function drawCustomRing(group, blip, x, y, order, style) {
               .append('pattern')
               .attr('id', patternId)
               .attr('patternUnits', style.pattern.patternUnits || 'userSpaceOnUse')
-              .attr('patternTransform', `scale(${style.pattern.patternTransform})` || 'scale(1)')
+              .attr('patternTransform', isLegend 
+                ? `${style.pattern.patternTransform} rotate(-45 18 18)` 
+                : `${style.pattern.patternTransform}`
+              )
               .attr('width', style.pattern.width || 2)
               .attr('height', style.pattern.height || 2)
               

@@ -513,7 +513,7 @@ function renderRadarLegends(radarElement, hasMovements, allStatuses) {
         try {
           console.log("🚀 ~ renderRadarLegends ~ style:", style)
           drawBlipCircle(legend.g, 'custom')
-          drawCustomRing(legend.g, fakeBlip, 10, 11, 'custom', style)
+          drawCustomRing(legend.g, fakeBlip, 10, 11, 'custom', style, isLegend=true)
           centerRingLine(legend.g, 'custom')
           
         } catch (e) {
