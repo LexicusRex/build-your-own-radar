@@ -24,6 +24,8 @@ const {
 const { renderQuadrantTables } = require('./components/quadrantTables')
 const { addQuadrantNameInPdfView, addRadarLinkInPdfView } = require('./pdfPage')
 
+const { validateAllowedStatuses } = require('./customRings')
+
 const { constructSheetUrl } = require('../util/urlUtils')
 const { toRadian } = require('../util/mathUtils')
 
@@ -563,7 +565,7 @@ const Radar = function (size, radar) {
     d3.select(`svg#radar-plot`).style('padding', '0')
 
     const radarLegendsContainer = d3.select('.radar-legends')
-    radarLegendsContainer.attr('class', 'radar-legends')
+    // radarLegendsContainer.attr('class', 'radar-legends')
     radarLegendsContainer.attr('style', null)
 
     d3.selectAll('svg#radar-plot a').attr('aria-hidden', null).attr('tabindex', null)
@@ -828,10 +830,36 @@ const Radar = function (size, radar) {
     })
 
     if (featureToggles.UIRefresh2022) {
-      renderRadarLegends(radarElement, hasMovementData(quadrants))
+      const collated = collateStatuses(quadrants)
+      // validate collated statuses against allowed (custom + hardcoded)
+      try {
+        validateAllowedStatuses(collated)
+      } catch (e) {
+        // validation may throw in non-browser contexts; log and continue
+        console.warn('Status validation error:', e && e.message)
+      }
+      renderRadarLegends(radarElement, hasMovementData(quadrants), collated)
       hideTooltipOnScroll(tip)
       addRadarLinkInPdfView()
     }
+  }
+
+  function collateStatuses(quadrants) {
+    const statuses = []
+    for (var quadrantWrapper of quadrants) {
+      let quadrant = quadrantWrapper.quadrant
+
+      for (var blip of quadrant.blips()) {
+        // account for the statuses with in/out honing and remove them, keeping only the main status using regex
+        // regex doesn't work
+
+        const status = blip.status().replace(/ (in|out)$/, '');
+        if (status !== '' && !statuses.includes(status)) {
+          statuses.push(status)
+        }
+      }
+    }
+    return statuses
   }
 
   function hasMovementData(quadrants) {

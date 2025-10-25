@@ -17,6 +17,7 @@
 @import 'landingpage';
 @import 'loader';
 @import 'screen';
+@import 'customRings';
 @import 'pdfPage';
 
 :root {
@@ -33,6 +34,7 @@
   body {
     font: 18px 'Open Sans';
     opacity: 0;
+
     @if $UIRefresh2022 {
       font-family: $baseFontFamily;
       opacity: 1;

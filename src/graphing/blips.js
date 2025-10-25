@@ -7,6 +7,7 @@ const isEmpty = require('lodash/isEmpty')
 const { replaceSpaceWithHyphens, removeAllSpaces } = require('../util/stringUtil')
 const config = require('../config')
 const featureToggles = config().featureToggles
+const { getCustomRingStyle, drawCustomRing } = require('./customRings')
 const _ = {
   sortBy: require('lodash/sortBy'),
 }
@@ -196,6 +197,12 @@ function drawBlipCircle(group, blip, xValue, yValue, order) {
     .style('transform', `scale(${blip.scale || 1})`)
 }
 
+function customBlip(blip, xValue, yValue, order, group, customStyle) {
+  drawBlipCircle(group, blip, xValue, yValue, order)
+  console.log('Drawing custom ring for blip:', blip.name(), customStyle)
+  drawCustomRing(group, blip, xValue, yValue, order, customStyle) 
+}
+
 function newBlip(blip, xValue, yValue, order, group) {
   drawBlipCircle(group, blip, xValue, yValue, order)
   addOuterCircle(group, order, blip.scale)
@@ -243,8 +250,11 @@ function drawBlipInCoordinates(blip, coordinates, order, quadrantGroup) {
     .attr('id', 'blip-link-' + blipId)
     .attr('data-blip-id', blipId)
     .attr('data-ring-name', blip.ring().name())
+  const customStyle = getCustomRingStyle(blip.status())
 
-  if (blip.isGroup()) {
+  if (customStyle) {
+    customBlip(blip, x, y, order, group, customStyle)
+  } else if (blip.isGroup()) {
     groupBlip(blip, x, y, order, group)
   } else if (blip.isNew()) {
     newBlip(blip, x, y, order, group)

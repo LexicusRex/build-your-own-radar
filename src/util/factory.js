@@ -211,7 +211,7 @@ const GoogleSheet = function (sheetReference, sheetName) {
   return self
 }
 
-const CSVDocument = function (url) {
+const CSVDocument = function (url) { // TODO: HERE
   var self = {}
 
   self.build = function () {
@@ -231,6 +231,7 @@ const CSVDocument = function (url) {
       contentValidator.verifyContent()
       contentValidator.verifyHeaders()
       var blips = _.map(data, new InputSanitizer().sanitize)
+      console.log("🚀 ~ createBlips ~ blips:", blips)
       featureToggles.UIRefresh2022
         ? plotRadarGraph(FileName(url), blips, 'CSV File', [])
         : plotRadar(FileName(url), blips, 'CSV File', [])
