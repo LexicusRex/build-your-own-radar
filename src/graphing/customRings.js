@@ -127,6 +127,19 @@ function drawCustomRing(group, blip, x, y, order, style, isLegend = false) {
 
   if (style.path) {
     let pathData = style.path
+    
+    // when using mask we want the path to be filled (the mask uses luminance)
+    pathData = style.path
+    const path = group
+      .append('path')
+      .attr('d', pathData)
+      .attr('class', `blip ${order} ${honeDirection ? honeDirection === 'in' ? 'hone-in' : 'hone-out' : ''}`)
+      .attr('fill', style.fill || '#003d4f')
+
+
+    if (blip.scale) {
+      path.style('transform', `scale(${blip.scale})`)
+    }
 
     // If a pattern is specified, create a pattern + mask and apply it
     if (style.pattern && style.pattern.enabled) {
@@ -189,36 +202,12 @@ function drawCustomRing(group, blip, x, y, order, style, isLegend = false) {
             m.append('rect').attr('width', '100%').attr('height', '100%').attr('fill', `url(#${patternId})`)
           }
 
-          // when using mask we want the path to be filled (the mask uses luminance)
-          pathData = style.path
-          const path = group
-            .append('path')
-            .attr('d', pathData)
-            .attr('class', `blip ${order} ${honeDirection ? honeDirection === 'in' ? 'hone-in' : 'hone-out' : ''}`)
-            .attr('mask', `url(#${maskId})`)
-            .attr('fill', style.fill || 'black')
-
-          if (blip.scale) {
-            path.style('transform', `scale(${blip.scale})`)
-          }
-
-          return
+          path.attr('mask', `url(#${maskId})`) 
         }
       } catch (e) {
         console.warn('Failed to apply pattern mask, falling back to normal path', e)
       }
     }
-
-    // TODO: Remove - fallback: plain path (or dashed-by-segmentation if requested) 
-    if (style.dash) {
-      // create a segmented path (non-DOM fallback)
-      try {
-        pathData = createDashedPath(style.path)
-      } catch (e) {
-        console.warn('Failed to create dashed path segmentation:', e)
-      }
-    }
-
 
     // Apply scale if specified in the blip
     if (blip.scale) {
