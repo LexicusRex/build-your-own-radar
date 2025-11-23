@@ -18,10 +18,10 @@ RUN npm ci
 
 COPY . ./
 
-# Install entrypoint that will source .env (if present) and exec the start command.
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Make the repo's entrypoint executable inside the image (entrypoint remains in the repo path).
+RUN chmod +x /src/build-your-own-radar/entrypoint.sh || true
 
-# Override parent node image's entrypoint and keep a simple CMD for the start script.
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# Run the entrypoint from the repo path so it is the same when running the baked image
+# or when the workspace is bind-mounted at /workspaces during development.
+ENTRYPOINT ["/bin/sh", "/src/build-your-own-radar/entrypoint.sh"]
 CMD ["./build_and_start_nginx.sh"]
