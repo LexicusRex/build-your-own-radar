@@ -29,16 +29,54 @@ Create a Google Sheet. Give it at least the below column headers, and put in the
 | Apache Kylin  | assess | platforms              | TRUE  | Apache Kylin is an open source analytics solution ...   |
 | JSF           | hold   | languages & frameworks | FALSE | We continue to see teams run into trouble using JSF ... |
 
+
 ### Want to show blip movement information?
 
 If you want to show movement of blips, add the optional column `status` to your dataset.
 
-This column accepts the following case-insensitive values :
+By default, this column accepts the following **case-insensitive** values :
 
 - `New` - appearing on the radar for the first time
 - `Moved In` - moving towards the center of the radar
 - `Moved Out` - moving towards the edge of the radar
 - `No Change` - no change in position
+
+
+### Customise your blips
+You may define your own ring styles to surround your blips in `src/config/ringStyles.json`.
+Simply define the style name, ring svg path, and provide a pattern mask should you wish.
+
+```json
+{
+  "<style_name>": {
+    "path": "<svg_path>",
+    "pattern": {
+      "enabled": true/false,
+      "width": 2,
+      "height": 2,
+      "patternUnits": "userSpaceOnUse",
+      "patternTransform": "rotate(45 18 18) scale(2)",
+      "rect": { "width": 1, "height": 2, "fill": "white" }
+    }
+  }
+}
+```
+A few example ring styles are given in `src/config/svgs/`. Should you wish to define your own ring styles, **note the viewport is 36 x 36**.
+A handy tool to experiment with SVGs can be found here https://yqnn.github.io/svg-path-editor/.
+
+In your dataset, add the optional column `status` and set the value to the respective `<style_name>` of your choosing. You will see the corresponding blip appear with the customised ring style along with its legend key under the radar. 
+
+### Hone and Away
+
+In the `status` column, you may add `in` or `out` after a custom ring style name (e.g., `<style_name> in`) to have it hone in towards or point away from the centre of the radar.
+This feature assumes the SVG path provided to the ring style is **soley symmetrical along the axis at -45°**, pointing diagonally up and to the left.
+
+For example:
+
+![](/src/config/svgs/first-quadrant.svg)
+![](/src/config/svgs/three-quadrants.svg)
+
+Please keep in mind what you deem as "pointing to the center" when factoring this feature into your SVG path design.
 
 ### Sharing the sheet
 
@@ -171,15 +209,50 @@ export RINGS='["Adopt", "Trial", "Assess", "Hold"]'
 export QUADRANTS='["Techniques", "Platforms", "Tools", "Languages & Frameworks"]'
 ```
 
+## `.env` file
+Please use `.env.example` as a reference to manage your environment variables.
+```bash
+# Google API / OAuth
+CLIENT_ID=your-google-client-id
+API_KEY=your-google-api-key
+
+# Enable authentication via Google (true/false)
+ENABLE_GOOGLE_AUTH=false
+
+# Google Tag Manager / Adobe Launch
+GTM_ID=
+ADOBE_LAUNCH_SCRIPT_URL=
+
+# Public path for webpack (optional)
+ASSET_PATH=/
+
+# Server hostnames accepted (space separated)
+SERVER_NAMES="localhost 127.0.0.1"
+
+# Radar rings and quadrants (JSON arrays)
+RINGS='["Adopt","Trial","Assess","Hold"]'
+QUADRANTS='["Techniques","Platforms","Tools","Languages & Frameworks"]'
+
+```
+
+
+
 ## Docker Image
 
-We have released BYOR as a docker image for our users. The image is available in our [DockerHub Repo](https://hub.docker.com/r/wwwthoughtworks/build-your-own-radar/). To pull and run the image, run the following commands.
+Clone this repo, then build and run the Docker image to check out the app. 
+
+Copy the `.env.example` file to `.env` and populate it with your client IDs and secrets if you wish. Adjust the Ring and Quadrant names to your preference.
 
 ```
-$ docker pull wwwthoughtworks/build-your-own-radar
-$ docker run --rm -p 8080:80 -e CLIENT_ID="[Google Client ID]" wwwthoughtworks/build-your-own-radar:latest
-$ open http://localhost:8080
+$ git clone https://github.com/LexicusRex/build-your-own-radar.git
+
+$ docker build -t build-your-own-radar:latest .
+$ docker run --env-file .env --rm -p 8080:80 --name byor build-your-own-radar:latest
 ```
+
+Open `http://localhost:8080/index.html` in your browser. Enter `http://localhost:8080/files/example.csv` into the search bar to render the example dataset with custom ring styles.
+
+
 
 **_Notes:_**
 
@@ -195,8 +268,7 @@ You can check your setup by clicking on "Build my radar" and by loading the `csv
 
 ```
 $ docker pull wwwthoughtworks/build-your-own-radar
-$ docker run --rm -p 8080:80 -e SERVER_NAMES="localhost 127.0.0.1" -v /mnt/radar/files/:/opt/build-your-own-radar/files wwwthoughtworks/build-your-own-radar:latest
-$ open http://localhost:8080
+$ docker run --env-file .env --rm -p 8080:80 -e SERVER_NAMES="localhost 127.0.0.1" -v /mnt/radar/files/:/opt/build-your-own-radar/files build-your-own-radar:latest
 ```
 
 This will:
@@ -212,6 +284,28 @@ There is a sample csv and json file placed in `spec/end_to_end_tests/resources/l
 
 - If API Key is also available, same can be provided to the `docker run` command as `-e API_KEY=[Google API Key]`.
 - For setting the `publicPath` in the webpack config while using this image, the path can be passed as an environment variable called `ASSET_PATH`.
+
+## Troubleshooting
+
+If you are cloning and building the Docker image on Windows, you may encounter the following error:
+```
+$'\r': command not found
+```
+
+This is caused by the git clone setting the files to EOL Sequence to CRLF.
+To rectify, run the following commands in the cloned repo:
+
+```
+# Set Git to respect LF in the repo
+git config core.autocrlf input
+
+# Re-checkout all files
+git rm --cached -r .
+git reset --hard
+```
+
+Open `build_and_start_nginx.sh` in a code editor of your choice and check that the file is set to LF.
+
 
 ## Contribute
 

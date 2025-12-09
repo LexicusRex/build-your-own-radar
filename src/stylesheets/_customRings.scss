@@ -1,0 +1,42 @@
+// Apply existing blip colors to custom paths
+.first {
+
+    &.blip.hone-in {
+        transform-origin: 18px 18px;
+        transform: rotate(180deg);
+    }
+}
+
+.second {
+
+    &.blip.hone-in {
+        transform-origin: 18px 18px;
+        transform: rotate(-90deg);
+    }
+
+    &.blip.hone-out {
+        transform-origin: 18px 18px;
+        transform: rotate(270deg);
+    }
+}
+
+.third {
+
+    &.blip.hone-in {
+        transform-origin: 18px 18px;
+        transform: rotate(270deg);
+    }
+
+    &.blip.hone-out {
+        transform-origin: 18px 18px;
+        transform: rotate(90deg);
+    }
+}
+
+.fourth {
+
+    &.blip.hone-out {
+        transform-origin: 18px 18px;
+        transform: rotate(180deg);
+    }
+}

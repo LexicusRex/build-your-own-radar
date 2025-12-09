@@ -21,3 +21,6 @@ cypress/
 .talismanrc
 
 .vscode/
+
+# Ignore local env files
+.env

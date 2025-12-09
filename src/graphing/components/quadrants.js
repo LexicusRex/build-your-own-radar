@@ -13,6 +13,8 @@ const {
 
 const ANIMATION_DURATION = 1000
 
+const { getCustomRingStyle, drawCustomRing } = require('../customRings')
+
 const { quadrantHeight, quadrantWidth, quadrantsGap, effectiveQuadrantWidth } = graphConfig
 
 let prevLeft, prevTop
@@ -390,45 +392,144 @@ function renderRadarQuadrants(size, svg, quadrant, rings, ringCalculator, tip) {
   return quadrantGroup
 }
 
-function renderRadarLegends(radarElement, hasMovements) {
+function renderRadarLegends(radarElement, hasMovements, allStatuses) {
   const legendsContainer = radarElement.append('div').classed('radar-legends', true)
 
-  const newImage = legendsContainer
-    .append('img')
-    .attr('src', '/images/new.svg')
-    .attr('width', '37px')
-    .attr('height', '37px')
-    .attr('alt', 'new blip legend icon')
-    .node().outerHTML
+  function createLegendItem(label) {
+    const item = legendsContainer.append('span').classed('legend-item', true)
+    const svg = item
+      .append('svg')
+      .attr('width', '37')
+      .attr('height', '37')
+      .attr('viewBox', '0 0 36 36')
+      .attr('role', 'img')
+      .attr('aria-label', `${label} blip legend icon`)
 
-  const movedImage = legendsContainer
-    .append('img')
-    .attr('src', '/images/moved.svg')
-    .attr('width', '37px')
-    .attr('height', '37px')
-    .attr('alt', `moved in or out blip legend icon`)
-    .node().outerHTML
+    const g = svg.append('g').attr('transform', 'translate(0, 0)')
+    return { item, svg, g, label }
+  }
 
-  const existingImage = legendsContainer
-    .append('img')
-    .attr('src', '/images/existing.svg')
-    .attr('width', '37px')
-    .attr('height', '37px')
-    .attr('alt', 'existing blip legend icon')
-    .node().outerHTML
+  function addOuterCircle(parentSvg, order, scale = 1) {
+    parentSvg
+      .append('path')
+      .attr('opacity', '1')
+      .attr('class', order)
+      .attr(
+        'd',
+        'M18 36C8.07 36 0 27.93 0 18S8.07 0 18 0c9.92 0 18 8.07 18 18S27.93 36 18 36zM18 3.14C9.81 3.14 3.14 9.81 3.14 18S9.81 32.86 18 32.86S32.86 26.19 32.86 18S26.19 3.14 18 3.14z',
+      )
+      .attr('fill', '#003d4f')  
+      .style('transform', `scale(${scale})`)
+  }
 
-  const noChangeImage = legendsContainer
-    .append('img')
-    .attr('src', '/images/no-change.svg')
-    .attr('width', '37px')
-    .attr('height', '37px')
-    .attr('alt', 'no change blip legend icon')
-    .node().outerHTML
+  function addMovedLine(parentSvg, order, scale = 1) {
+    const cx = 18; // center x of your parent circle (adjust as needed)
+    const cy = 18; // center y of your parent circle
+    // const r = 20; // roughly outer radius from your path
+    
+    // Create a quarter circle path starting from top
+    parentSvg
+      .append('path')
+      .attr('opacity', '1')
+      .attr('class', order)
+      .attr(
+        'd',
+        'M19.5 1.56c0 0.86-0.7 1.56-1.56 1.56c-8.16 0-14.8 6.64-14.8 14.8c0 0.86-0.7 1.56-1.56 1.56S0 18.8 0 17.93C0 8.04 8.04 0 17.93 0C18.8 0 19.5 0.7 19.5 1.56z'
+      )
+      .attr('fill', '#003d4f')  
+      .style('transform-origin', `${cx}px ${cy}px`)
+      .style('transform', `rotate(45deg) scale(${scale})`);
+  }
 
+  function drawBlipCircle(group, order, scale = 1) {
+    group
+      .append('circle')
+      .attr('r', '12')
+      .attr('cx', '18')
+      .attr('cy', '18')
+      .attr('fill', '#003d4f')  
+      .attr('class', order)
+      .style('transform', `scale(${scale})`)
+  }
+
+  function centerRingLine(parentSvg, order, scale = 1) {
+    const cx = 18; // center x of your parent circle (adjust as needed)
+    const cy = 18; // center y of your parent circle
+    
+    parentSvg
+      .style('transform-origin', `${cx}px ${cy}px`)
+      .style('transform', `rotate(45deg) scale(${scale})`);
+
+  }
+
+  // Create new blip legend
+  const newLegend = createLegendItem('new')
+  drawBlipCircle(newLegend.g, 'first')
+  newLegend.item.append('span').text('New')
+
+  console.log("🚀 ~ renderRadarLegends ~ hasMovements:", hasMovements)
   if (hasMovements) {
-    legendsContainer.html(`${newImage} New ${movedImage} Moved in/out ${noChangeImage} No change`)
+    // Create moved blip legend
+    const movedLegend = createLegendItem('moved')
+    drawBlipCircle(movedLegend.g, 'second')
+    addMovedLine(movedLegend.g, 'second')
+    movedLegend.item.append('span').text('Moved in/out')
+
+    // Create no change blip legend
+    const noChangeLegend = createLegendItem('no-change')
+    drawBlipCircle(noChangeLegend.g, 'third')
+    addOuterCircle(noChangeLegend.g, 'third')
+    noChangeLegend.item.append('span').text('No change')
   } else {
-    legendsContainer.html(`${newImage} New ${existingImage} Existing`)
+    // Create existing blip legend
+    const existingLegend = createLegendItem('existing')
+    drawBlipCircle(existingLegend.g, 'second')
+    addOuterCircle(existingLegend.g, 'second')
+    existingLegend.item.append('span').text('Existing')
+  }
+
+  // Draw legends for custom statuses (those not covered by the default set)
+  // `allStatuses` contains the collated statuses passed from radar; filter out defaults
+  try {
+    const defaults = ['new', 'moved', 'no change', 'existing']
+    const normalized = (allStatuses || []).map((s) => (s || '').toString().trim())
+    const customStatuses = normalized.filter((s) => !defaults.includes(s.toLowerCase()))
+
+    customStatuses.forEach((status) => {
+      // get style for this status (if present)
+      const style = getCustomRingStyle(status)
+      const legend = createLegendItem(status)
+
+      if (style) {
+        // create a small fake blip object compatible with drawCustomRing
+        const fakeBlip = {
+          id: () => `legend-${String(status).replace(/\s+/g, '-')}`,
+          status: () => status,
+          // drawCustomRing checks blip.scale as a property in some places
+          scale: 1,
+        }
+
+        // draw the custom ring into the legend group's coordinate space (center at 18,18)
+        try {
+          console.log("🚀 ~ renderRadarLegends ~ style:", style)
+          drawBlipCircle(legend.g, 'custom')
+          drawCustomRing(legend.g, fakeBlip, 10, 11, 'custom', style, isLegend=true)
+          centerRingLine(legend.g, 'custom')
+          
+        } catch (e) {
+          console.warn('Failed to draw custom legend for', status, e)
+          // fallback to simple circle
+          drawBlipCircle(legend.g, 'custom')
+        }
+      } else {
+        // If no style found, fallback to default circle
+        drawBlipCircle(legend.g, 'custom')
+      }
+
+      legend.item.append('span').text(status)
+    })
+  } catch (e) {
+    console.warn('Error rendering custom legends', e)
   }
 }
 

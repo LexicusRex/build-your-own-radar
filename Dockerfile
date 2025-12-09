@@ -1,6 +1,7 @@
 FROM nginx:1.23.0
 
-RUN apt-get update && apt-get upgrade -y
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y git curl
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
@@ -20,4 +21,4 @@ COPY . ./
 # Override parent node image's entrypoint script (/usr/local/bin/docker-entrypoint.sh),
 # which tries to run CMD as a node command
 ENTRYPOINT []
-CMD ["./build_and_start_nginx.sh"]
+CMD ["/bin/bash", "./build_and_start_nginx.sh"]
